@@ -6,12 +6,37 @@
 
 int isInArray(int n, int* arr, int num) {
 
-    for (int i = 0; i < n; i++) {
+    if (1 < n && arr[1] == num) {
 
-        if (arr[i] == num) {
+        return 1;
+    }
+    if (2 < n && arr[2] == num) {
 
-            return 1;
-        }
+        return 1;
+    }
+    if (3 < n && arr[3] == num) {
+
+        return 1;
+    }
+    if (4 < n && arr[4] == num) {
+
+        return 1;
+    }
+    if (5 < n && arr[5] == num) {
+
+        return 1;
+    }
+    if (6 < n && arr[6] == num) {
+
+        return 1;
+    }
+    if (7 < n && arr[7] == num) {
+
+        return 1;
+    }
+    if (8 < n && arr[8] == num) {
+
+        return 1;
     }
 
     return 0;
@@ -81,9 +106,9 @@ void generation(int n, int** arr, int depth, int* min, int* cur_arr, int* out_ar
         return;
     }
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 1; i < n; i++) {
 
-        if (isInArray(depth, cur_arr, i)) {
+        if (depth > 1 && isInArray(depth, cur_arr, i)) {
 
             continue;
         }
