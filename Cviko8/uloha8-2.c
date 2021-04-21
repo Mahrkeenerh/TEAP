@@ -4,80 +4,197 @@
 #include <stdlib.h>
 
 
-int kid_food[100][100], kid_drink[100][100], kid_food_amount[100], kid_drink_amount[100], taken_food[100], taken_drink[100];
+#define SOURCE 0
+#define SINK (n + n + f + d + 1)
+#define SIZE (n + n + f + d + 2)
 
 
-int assign(int kid, int n) {
+typedef struct node {
+    int data;
+    struct node* next;
+} node;
 
-    if (kid == n) {
-        return 0;
+
+int array[402][402];
+int n, f, d;
+node* queue = NULL;
+
+
+void queue_add(int data) {
+
+    if (queue == NULL) {
+
+        queue = (node*) malloc(sizeof(node));
+        queue->data = data;
+        queue->next = NULL;
+
+        return;
     }
 
-    int best = 0;
-    int new_out;
+    // while (pointer->next != NULL) {
 
-    // Loop through favorite foods
-    for (int i = 0; i < kid_food_amount[kid]; i++) {
-        
-        // Loop through favorite drinks
-        for (int ii = 0; ii < kid_drink_amount[kid]; ii++) {
+    //     pointer = pointer->next;
+    // }
 
-            if (!taken_food[kid_food[kid][i]] && !taken_drink[kid_drink[kid][ii]]) {
+    node* new_node = (node*) malloc(sizeof(node));
 
-                taken_drink[kid_drink[kid][ii]] = 1;
-                taken_food[kid_food[kid][i]] = 1;
+    new_node->data = data;
+    new_node->next = queue;
+    queue = new_node;
+}
 
-                new_out = 1 + assign(kid + 1, n);
 
-                if (new_out > best) {
-                    best = new_out;
+int queue_pop() {
+
+    node* old = queue;
+    int data = queue->data;
+
+    queue = queue->next;
+    free(old);
+
+    return data;
+}
+
+
+int BFS(int* parent) {
+
+    int visited[402];
+
+    for (int i = 0; i < SIZE; i++) {
+        visited[i] = 0;
+    }
+
+    queue = NULL;
+
+    queue_add(SOURCE);
+    visited[SOURCE] = 1;
+
+    while (queue != NULL) {
+
+        int u = queue_pop();
+
+        for (int i = 0; i < SIZE; i++) {
+
+            if (array[u][i] > 0 && !visited[i]) {
+
+                parent[i] = u;
+                visited[i] = 1;
+
+                if (i == SINK) {
+
+                    return 1;
                 }
 
-                taken_drink[kid_drink[kid][ii]] = 0;
-                taken_food[kid_food[kid][i]] = 0;
+                queue_add(i);
             }
         }
     }
 
-    new_out = assign(kid + 1, n);
+    return 0;
+}
 
-    if (new_out > best) {
-        best = new_out;
+
+int FordFulkerson() {
+
+    int parent[402], max_flow = 0;
+
+    for (int i = 0; i < SIZE; i++) {
+        parent[i] = -1;
     }
 
-    return best;
+    while (BFS(parent)) {
+
+        // while (s != SOURCE) {
+        //     printf("%d ", s);
+        //     path_flow = minim(path_flow, array[parent[s]][s]);
+        //     s = parent[s];
+        // }
+        // printf("p: %d\n", path_flow);
+
+        // for (int i = 1; i < n + 1; i++) {
+        //     printf("%d ", array[0][i]);
+        // }
+        // printf("\n");
+
+        // for (int i = 0; i < 14; i++) {
+        //     for (int ii = 0; ii < 14; ii++) {
+        //         printf("%d ", array[i][ii]);
+        //     }
+        //     printf("\n");
+        // }
+        // printf("\n");
+
+        int v = SINK;
+        max_flow += 1;
+
+        while (v != SOURCE) {
+
+            // printf("%d ", v);
+
+            int u = parent[v];
+            array[u][v] = 0;
+            array[v][u] = 1;
+            v = parent[v];
+        }
+        // printf("\n");
+    }
+
+    return max_flow;
 }
 
 
 int main() {
 
-    int n, f, d;
+    int temp_food[100], temp_drink;
+    int food_counter, drink_counter;
 
     while (scanf("%d %d %d", &n, &f, &d) > 0) {
 
-        // Load all
-        for (int i = 0; i < n; i++) {
+        // Reset array
+        for (int i = 0; i < n + n + f + d + 2; i++) {
 
-            taken_drink[i] = 0;
-            taken_food[i] = 0;
+            for (int ii = 0; ii < n + n + f + d + 2; ii++) {
+
+                array[i][ii] = 0;
+            }
         }
 
+        for (int i = 0; i < f; i++) {
+            // source -> food
+            array[0][i + 1] = 1;
+        }
+
+        // Load all children
         for (int i = 0; i < n; i++) {
 
-            scanf("%d %d", kid_food_amount + i, kid_drink_amount + i);
+            // child -> child
+            array[f + i + 1][f + i + 1 + n] = 1;
 
-            for (int ii = 0; ii < kid_food_amount[i]; ii++) {
+            scanf("%d %d", &food_counter, &drink_counter);
 
-                scanf("%d", &(kid_food[i][ii]));
+            // Load food and drink
+            for (int ii = 0; ii < food_counter; ii++) {
+
+                scanf("%d", temp_food + ii);
+                array[temp_food[ii]][f + i + 1] = 1;
             }
-            for (int ii = 0; ii < kid_drink_amount[i]; ii++) {
+            for (int ii = 0; ii < drink_counter; ii++) {
 
-                scanf("%d", &(kid_drink[i][ii]));
+                scanf("%d", &temp_drink);
+                // child -> drink
+                array[n + f + i + 1][n + n + f + temp_drink] = 1;
+                
             }
+        }
+
+        // drink -> sink
+        for (int i = 0; i < d; i++) {
+
+            array[n + n + f + i + 1][SINK] = 1;
         }
 
         // Compute
-        printf("%d\n", assign(0, n));
+        printf("%d\n", FordFulkerson());
     }
 
     return 0;
